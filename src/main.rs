@@ -1,10 +1,12 @@
 extern crate rand;
 
 use rand::Rng;
+use std::env;
 use std::fmt;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io;
+use std::process;
 
 // OLD_YIN: A broken line changing to a solid line.
 const OLD_YIN: u8 = 6;
@@ -102,7 +104,7 @@ impl Hexagram {
         }
     }
 
-    fn reading(&self) {
+    fn reading(&self) -> String {
         let chien_row = vec![1, 34, 5, 26, 11, 9, 14, 43];
         let chen_row = vec![25, 51, 3, 27, 24, 42, 21, 17];
         let kan_row = vec![6, 40, 29, 4, 7, 59, 64, 47];
@@ -126,21 +128,25 @@ impl Hexagram {
         let upper = &self.above.get_name();
         let reading_index = rows[*lower][*upper];
 
-        read_file(reading_index);
+        read_file(reading_index)
     }
 }
 
-fn read_file(index: u8){
+fn read_file(index: u8) -> String {
     let contents = include_str!("./i.txt");
     let search_string = format!("<a name=\"{}\"></a>", index);
     let end_string = "<a href=\"#index\">index</a><br><br>";
     // println!("{}", contents);
     let found = contents.find(&search_string).unwrap();
-    let array = contents.split_at(found);
+    // let array = contents.split_at(found);
 
-    let array2: Vec<&str> = array.1.split(&end_string).collect();
-    let result = array2[1];
-    println!("{}", result);
+    let array: Vec<&str> = contents.split_terminator(&search_string).collect();
+
+    let array2: Vec<&str> = array[1].split(&end_string).collect();
+    // println!("{:?}", array2[0]);
+    // println!("{:?}", array2[0]);
+    let result = array2[0];
+    result.to_string()
 
 }
 
@@ -189,14 +195,24 @@ fn main() {
 
     hexagram.print();
 
+    // Do we want to print the reading in terminal?
     println!("\nShow reading? (Y/n)");
     let stdin = io::stdin();
     for line in stdin.lock().lines() {
         if line.unwrap() == "n" {
             println!("\nhttp://www.akirarabelais.com/i/i.html");
         } else {
-            hexagram.reading();
+            let mut res = env::vars().filter(|(key, value)| {
+                key == "PAGER"
+            });
+
+            // Should get `less` for us.
+            let (_, pager) = res.nth(0).unwrap();
+
+            let reading = hexagram.reading();
+
+            println!("{}", &reading);
         }
-        ::std::process::exit(0);
+        process::exit(0);
     }
 }
