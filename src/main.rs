@@ -131,7 +131,7 @@ impl Hexagram {
 }
 
 fn read_file(index: u8){
-    let contents = include_str!("./i.html");
+    let contents = include_str!("./i.txt");
     let search_string = format!("<a name=\"{}\"></a>", index);
     let end_string = "<a href=\"#index\">index</a><br><br>";
     // println!("{}", contents);
